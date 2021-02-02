@@ -408,6 +408,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
 
 - (void)setObject:(id)object forKey:(id)key {
     [self setObject:object forKey:key withCost:0];
+    // done
 }
 
 - (void)setObject:(id)object forKey:(id)key withCost:(NSUInteger)cost {

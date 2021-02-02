@@ -18,13 +18,16 @@
 - (instancetype) init {
     NSLog(@"Use \"initWithName\" or \"initWithPath\" to create YYCache instance.");
     return [self initWithPath:@""];
+    // done
 }
 
 - (instancetype)initWithName:(NSString *)name {
     if (name.length == 0) return nil;
+    // 获取沙盒中的 cache 文件路径
     NSString *cacheFolder = [NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES) firstObject];
     NSString *path = [cacheFolder stringByAppendingPathComponent:name];
     return [self initWithPath:path];
+    // done
 }
 
 - (instancetype)initWithPath:(NSString *)path {
@@ -40,18 +43,22 @@
     _diskCache = diskCache;
     _memoryCache = memoryCache;
     return self;
+    // done
 }
 
 + (instancetype)cacheWithName:(NSString *)name {
     return [[self alloc] initWithName:name];
+    // done
 }
 
 + (instancetype)cacheWithPath:(NSString *)path {
     return [[self alloc] initWithPath:path];
+    // done
 }
 
 - (BOOL)containsObjectForKey:(NSString *)key {
     return [_memoryCache containsObjectForKey:key] || [_diskCache containsObjectForKey:key];
+    // done
 }
 
 - (void)containsObjectForKey:(NSString *)key withBlock:(void (^)(NSString *key, BOOL contains))block {
@@ -64,6 +71,7 @@
     } else  {
         [_diskCache containsObjectForKey:key withBlock:block];
     }
+    // done
 }
 
 - (id<NSCoding>)objectForKey:(NSString *)key {
@@ -75,6 +83,7 @@
         }
     }
     return object;
+    // done
 }
 
 - (void)objectForKey:(NSString *)key withBlock:(void (^)(NSString *key, id<NSCoding> object))block {
@@ -92,48 +101,56 @@
             block(key, object);
         }];
     }
+    // done
 }
 
 - (void)setObject:(id<NSCoding>)object forKey:(NSString *)key {
     [_memoryCache setObject:object forKey:key];
     [_diskCache setObject:object forKey:key];
+    // done
 }
 
 - (void)setObject:(id<NSCoding>)object forKey:(NSString *)key withBlock:(void (^)(void))block {
     [_memoryCache setObject:object forKey:key];
     [_diskCache setObject:object forKey:key withBlock:block];
+    // done
 }
 
 - (void)removeObjectForKey:(NSString *)key {
     [_memoryCache removeObjectForKey:key];
     [_diskCache removeObjectForKey:key];
+    // done
 }
 
 - (void)removeObjectForKey:(NSString *)key withBlock:(void (^)(NSString *key))block {
     [_memoryCache removeObjectForKey:key];
     [_diskCache removeObjectForKey:key withBlock:block];
+    // done
 }
 
 - (void)removeAllObjects {
     [_memoryCache removeAllObjects];
     [_diskCache removeAllObjects];
+    // done
 }
 
 - (void)removeAllObjectsWithBlock:(void(^)(void))block {
     [_memoryCache removeAllObjects];
     [_diskCache removeAllObjectsWithBlock:block];
+    // done
 }
 
 - (void)removeAllObjectsWithProgressBlock:(void(^)(int removedCount, int totalCount))progress
                                  endBlock:(void(^)(BOOL error))end {
     [_memoryCache removeAllObjects];
     [_diskCache removeAllObjectsWithProgressBlock:progress endBlock:end];
-    
+    // done
 }
 
 - (NSString *)description {
     if (_name) return [NSString stringWithFormat:@"<%@: %p> (%@)", self.class, self, _name];
     else return [NSString stringWithFormat:@"<%@: %p>", self.class, self];
+    // done
 }
 
 @end
