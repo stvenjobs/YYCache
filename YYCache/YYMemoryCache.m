@@ -18,6 +18,7 @@
 
 static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     return dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0);
+    // done
 }
 
 /**
@@ -84,10 +85,12 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     _releaseOnMainThread = NO;
     _releaseAsynchronously = YES;
     return self;
+    // done
 }
 
 - (void)dealloc {
     CFRelease(_dic);
+    // done
 }
 
 - (void)insertNodeAtHead:(_YYLinkedMapNode *)node {
@@ -101,6 +104,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     } else {
         _head = _tail = node;
     }
+    // done
 }
 
 - (void)bringNodeToHead:(_YYLinkedMapNode *)node {
@@ -117,6 +121,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     node->_prev = nil;
     _head->_prev = node;
     _head = node;
+    // done
 }
 
 - (void)removeNode:(_YYLinkedMapNode *)node {
@@ -127,6 +132,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     if (node->_prev) node->_prev->_next = node->_next;
     if (_head == node) _head = node->_next;
     if (_tail == node) _tail = node->_prev;
+    // done
 }
 
 - (_YYLinkedMapNode *)removeTailNode {
@@ -142,6 +148,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
         _tail->_next = nil;
     }
     return tail;
+    // done
 }
 
 - (void)removeAll {
@@ -166,6 +173,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
             CFRelease(holder);
         }
     }
+    // done
 }
 
 @end
@@ -175,6 +183,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
 @implementation YYMemoryCache {
     pthread_mutex_t _lock;
     _YYLinkedMap *_lru;
+    // 串行队列
     dispatch_queue_t _queue;
 }
 
@@ -186,6 +195,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
         [self _trimInBackground];
         [self _trimRecursively];
     });
+    // done
 }
 
 - (void)_trimInBackground {
@@ -194,6 +204,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
         [self _trimToCount:self->_countLimit];
         [self _trimToAge:self->_ageLimit];
     });
+    // done
 }
 
 - (void)_trimToCost:(NSUInteger)costLimit {
@@ -228,6 +239,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
             [holder count]; // release in queue
         });
     }
+    // done
 }
 
 - (void)_trimToCount:(NSUInteger)countLimit {
@@ -262,6 +274,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
             [holder count]; // release in queue
         });
     }
+    // done
 }
 
 - (void)_trimToAge:(NSTimeInterval)ageLimit {
@@ -297,6 +310,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
             [holder count]; // release in queue
         });
     }
+    // done
 }
 
 - (void)_appDidReceiveMemoryWarningNotification {
@@ -306,6 +320,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     if (self.shouldRemoveAllObjectsOnMemoryWarning) {
         [self removeAllObjects];
     }
+    // done
 }
 
 - (void)_appDidEnterBackgroundNotification {
@@ -315,12 +330,14 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     if (self.shouldRemoveAllObjectsWhenEnteringBackground) {
         [self removeAllObjects];
     }
+    // done
 }
 
 #pragma mark - public
 
 - (instancetype)init {
     self = super.init;
+    // 锁初始化
     pthread_mutex_init(&_lock, NULL);
     _lru = [_YYLinkedMap new];
     _queue = dispatch_queue_create("com.ibireme.cache.memory", DISPATCH_QUEUE_SERIAL);
@@ -337,6 +354,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     
     [self _trimRecursively];
     return self;
+    // done
 }
 
 - (void)dealloc {
@@ -344,6 +362,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationDidEnterBackgroundNotification object:nil];
     [_lru removeAll];
     pthread_mutex_destroy(&_lock);
+    // done
 }
 
 - (NSUInteger)totalCount {
@@ -351,6 +370,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     NSUInteger count = _lru->_totalCount;
     pthread_mutex_unlock(&_lock);
     return count;
+    // done
 }
 
 - (NSUInteger)totalCost {
@@ -358,6 +378,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     NSUInteger totalCost = _lru->_totalCost;
     pthread_mutex_unlock(&_lock);
     return totalCost;
+    // done
 }
 
 - (BOOL)releaseOnMainThread {
@@ -365,12 +386,14 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     BOOL releaseOnMainThread = _lru->_releaseOnMainThread;
     pthread_mutex_unlock(&_lock);
     return releaseOnMainThread;
+    // done
 }
 
 - (void)setReleaseOnMainThread:(BOOL)releaseOnMainThread {
     pthread_mutex_lock(&_lock);
     _lru->_releaseOnMainThread = releaseOnMainThread;
     pthread_mutex_unlock(&_lock);
+    // done
 }
 
 - (BOOL)releaseAsynchronously {
@@ -378,12 +401,14 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     BOOL releaseAsynchronously = _lru->_releaseAsynchronously;
     pthread_mutex_unlock(&_lock);
     return releaseAsynchronously;
+    // done
 }
 
 - (void)setReleaseAsynchronously:(BOOL)releaseAsynchronously {
     pthread_mutex_lock(&_lock);
     _lru->_releaseAsynchronously = releaseAsynchronously;
     pthread_mutex_unlock(&_lock);
+    // done
 }
 
 - (BOOL)containsObjectForKey:(id)key {
@@ -392,6 +417,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     BOOL contains = CFDictionaryContainsKey(_lru->_dic, (__bridge const void *)(key));
     pthread_mutex_unlock(&_lock);
     return contains;
+    // done
 }
 
 - (id)objectForKey:(id)key {
@@ -404,6 +430,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
     }
     pthread_mutex_unlock(&_lock);
     return node ? node->_value : nil;
+    // done
 }
 
 - (void)setObject:(id)object forKey:(id)key {
@@ -454,6 +481,7 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
         }
     }
     pthread_mutex_unlock(&_lock);
+    // done
 }
 
 - (void)removeObjectForKey:(id)key {
@@ -474,12 +502,14 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
         }
     }
     pthread_mutex_unlock(&_lock);
+    // done
 }
 
 - (void)removeAllObjects {
     pthread_mutex_lock(&_lock);
     [_lru removeAll];
     pthread_mutex_unlock(&_lock);
+    // done
 }
 
 - (void)trimToCount:(NSUInteger)count {
@@ -488,19 +518,23 @@ static inline dispatch_queue_t YYMemoryCacheGetReleaseQueue() {
         return;
     }
     [self _trimToCount:count];
+    // done
 }
 
 - (void)trimToCost:(NSUInteger)cost {
     [self _trimToCost:cost];
+    // done
 }
 
 - (void)trimToAge:(NSTimeInterval)age {
     [self _trimToAge:age];
+    // done
 }
 
 - (NSString *)description {
     if (_name) return [NSString stringWithFormat:@"<%@: %p> (%@)", self.class, self, _name];
     else return [NSString stringWithFormat:@"<%@: %p>", self.class, self];
+    // done
 }
 
 @end
