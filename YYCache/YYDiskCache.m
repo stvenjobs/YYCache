@@ -29,6 +29,7 @@ static int64_t _YYDiskSpaceFree() {
     int64_t space =  [[attrs objectForKey:NSFileSystemFreeSize] longLongValue];
     if (space < 0) space = -1;
     return space;
+    // done
 }
 
 /// String's md5 hash.
@@ -44,6 +45,7 @@ static NSString *_YYNSStringMD5(NSString *string) {
                 result[8],  result[9],  result[10], result[11],
                 result[12], result[13], result[14], result[15]
             ];
+    // done
 }
 
 /// weak reference for all instances
@@ -56,6 +58,7 @@ static void _YYDiskCacheInitGlobal() {
         _globalInstancesLock = dispatch_semaphore_create(1);
         _globalInstances = [[NSMapTable alloc] initWithKeyOptions:NSPointerFunctionsStrongMemory valueOptions:NSPointerFunctionsWeakMemory capacity:0];
     });
+    // done
 }
 
 static YYDiskCache *_YYDiskCacheGetGlobal(NSString *path) {
@@ -65,6 +68,7 @@ static YYDiskCache *_YYDiskCacheGetGlobal(NSString *path) {
     id cache = [_globalInstances objectForKey:path];
     dispatch_semaphore_signal(_globalInstancesLock);
     return cache;
+    // done
 }
 
 static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
@@ -73,6 +77,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     dispatch_semaphore_wait(_globalInstancesLock, DISPATCH_TIME_FOREVER);
     [_globalInstances setObject:cache forKey:cache.path];
     dispatch_semaphore_signal(_globalInstancesLock);
+    // done
 }
 
 
@@ -91,6 +96,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         [self _trimInBackground];
         [self _trimRecursively];
     });
+    // 递归清理
 }
 
 - (void)_trimInBackground {
@@ -105,17 +111,19 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         [self _trimToFreeDiskSpace:self.freeDiskSpaceLimit];
         Unlock();
     });
+    // done
 }
 
 - (void)_trimToCost:(NSUInteger)costLimit {
     if (costLimit >= INT_MAX) return;
     [_kv removeItemsToFitSize:(int)costLimit];
-    
+    // done
 }
 
 - (void)_trimToCount:(NSUInteger)countLimit {
     if (countLimit >= INT_MAX) return;
     [_kv removeItemsToFitCount:(int)countLimit];
+    // done
 }
 
 - (void)_trimToAge:(NSTimeInterval)ageLimit {
@@ -128,6 +136,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     long age = timestamp - ageLimit;
     if (age >= INT_MAX) return;
     [_kv removeItemsEarlierThanTime:(int)age];
+    // d
 }
 
 - (void)_trimToFreeDiskSpace:(NSUInteger)targetFreeDiskSpace {
@@ -141,6 +150,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     int64_t costLimit = totalBytes - needTrimBytes;
     if (costLimit < 0) costLimit = 0;
     [self _trimToCost:(int)costLimit];
+    // d
 }
 
 - (NSString *)_filenameForKey:(NSString *)key {
@@ -148,23 +158,27 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     if (_customFileNameBlock) filename = _customFileNameBlock(key);
     if (!filename) filename = _YYNSStringMD5(key);
     return filename;
+    // d
 }
 
 - (void)_appWillBeTerminated {
     Lock();
     _kv = nil;
     Unlock();
+    // d
 }
 
 #pragma mark - public
 
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self name:UIApplicationWillTerminateNotification object:nil];
+    // d
 }
 
 - (instancetype)init {
     @throw [NSException exceptionWithName:@"YYDiskCache init error" reason:@"YYDiskCache must be initialized with a path. Use 'initWithPath:' or 'initWithPath:inlineThreshold:' instead." userInfo:nil];
     return [self initWithPath:@"" inlineThreshold:0];
+    // d
 }
 
 - (instancetype)initWithPath:(NSString *)path {
@@ -208,6 +222,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(_appWillBeTerminated) name:UIApplicationWillTerminateNotification object:nil];
     return self;
+    // d
 }
 
 - (BOOL)containsObjectForKey:(NSString *)key {
@@ -216,6 +231,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     BOOL contains = [_kv itemExistsForKey:key];
     Unlock();
     return contains;
+    // d
 }
 
 - (void)containsObjectForKey:(NSString *)key withBlock:(void(^)(NSString *key, BOOL contains))block {
@@ -226,6 +242,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         BOOL contains = [self containsObjectForKey:key];
         block(key, contains);
     });
+    // d
 }
 
 - (id<NSCoding>)objectForKey:(NSString *)key {
@@ -250,6 +267,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         [YYDiskCache setExtendedData:item.extendedData toObject:object];
     }
     return object;
+    // d
 }
 
 - (void)objectForKey:(NSString *)key withBlock:(void(^)(NSString *key, id<NSCoding> object))block {
@@ -260,6 +278,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         id<NSCoding> object = [self objectForKey:key];
         block(key, object);
     });
+    // d
 }
 
 - (void)setObject:(id<NSCoding>)object forKey:(NSString *)key {
@@ -292,6 +311,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     Lock();
     [_kv saveItemWithKey:key value:value filename:filename extendedData:extendedData];
     Unlock();
+    // d
 }
 
 - (void)setObject:(id<NSCoding>)object forKey:(NSString *)key withBlock:(void(^)(void))block {
@@ -301,6 +321,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         [self setObject:object forKey:key];
         if (block) block();
     });
+    // d
 }
 
 - (void)removeObjectForKey:(NSString *)key {
@@ -308,6 +329,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     Lock();
     [_kv removeItemForKey:key];
     Unlock();
+    // d
 }
 
 - (void)removeObjectForKey:(NSString *)key withBlock:(void(^)(NSString *key))block {
@@ -317,12 +339,14 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         [self removeObjectForKey:key];
         if (block) block(key);
     });
+    // d
 }
 
 - (void)removeAllObjects {
     Lock();
     [_kv removeAllItems];
     Unlock();
+    // d
 }
 
 - (void)removeAllObjectsWithBlock:(void(^)(void))block {
@@ -332,6 +356,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         [self removeAllObjects];
         if (block) block();
     });
+    // d
 }
 
 - (void)removeAllObjectsWithProgressBlock:(void(^)(int removedCount, int totalCount))progress
@@ -347,6 +372,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         [_kv removeAllItemsWithProgressBlock:progress endBlock:end];
         Unlock();
     });
+    // d
 }
 
 - (NSInteger)totalCount {
@@ -354,6 +380,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     int count = [_kv getItemsCount];
     Unlock();
     return count;
+    // d
 }
 
 - (void)totalCountWithBlock:(void(^)(NSInteger totalCount))block {
@@ -364,6 +391,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         NSInteger totalCount = [self totalCount];
         block(totalCount);
     });
+    // d
 }
 
 - (NSInteger)totalCost {
@@ -371,6 +399,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     int count = [_kv getItemsSize];
     Unlock();
     return count;
+    // d
 }
 
 - (void)totalCostWithBlock:(void(^)(NSInteger totalCost))block {
@@ -381,12 +410,14 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         NSInteger totalCost = [self totalCost];
         block(totalCost);
     });
+    // d
 }
 
 - (void)trimToCount:(NSUInteger)count {
     Lock();
     [self _trimToCount:count];
     Unlock();
+    // d
 }
 
 - (void)trimToCount:(NSUInteger)count withBlock:(void(^)(void))block {
@@ -396,12 +427,14 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         [self trimToCount:count];
         if (block) block();
     });
+    // d
 }
 
 - (void)trimToCost:(NSUInteger)cost {
     Lock();
     [self _trimToCost:cost];
     Unlock();
+    // d
 }
 
 - (void)trimToCost:(NSUInteger)cost withBlock:(void(^)(void))block {
@@ -411,12 +444,14 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         [self trimToCost:cost];
         if (block) block();
     });
+    // d
 }
 
 - (void)trimToAge:(NSTimeInterval)age {
     Lock();
     [self _trimToAge:age];
     Unlock();
+    // d
 }
 
 - (void)trimToAge:(NSTimeInterval)age withBlock:(void(^)(void))block {
@@ -426,6 +461,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
         [self trimToAge:age];
         if (block) block();
     });
+    // d
 }
 
 + (NSData *)getExtendedDataFromObject:(id)object {
@@ -441,6 +477,7 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
 - (NSString *)description {
     if (_name) return [NSString stringWithFormat:@"<%@: %p> (%@:%@)", self.class, self, _name, _path];
     else return [NSString stringWithFormat:@"<%@: %p> (%@)", self.class, self, _path];
+    // d
 }
 
 - (BOOL)errorLogsEnabled {
@@ -448,12 +485,14 @@ static void _YYDiskCacheSetGlobal(YYDiskCache *cache) {
     BOOL enabled = _kv.errorLogsEnabled;
     Unlock();
     return enabled;
+    // d
 }
 
 - (void)setErrorLogsEnabled:(BOOL)errorLogsEnabled {
     Lock();
     _kv.errorLogsEnabled = errorLogsEnabled;
     Unlock();
+    // d
 }
 
 @end

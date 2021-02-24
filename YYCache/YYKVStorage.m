@@ -22,6 +22,7 @@
 
 static const NSUInteger kMaxErrorRetryCount = 8;
 static const NSTimeInterval kMinRetryTimeInterval = 2.0;
+// PATH_MAX: max bytes in pathname
 static const int kPathLengthMax = PATH_MAX - 64;
 static NSString *const kDBFileName = @"manifest.sqlite";
 static NSString *const kDBShmFileName = @"manifest.sqlite-shm";
@@ -69,6 +70,7 @@ static UIApplication *_YYSharedApplication() {
 #pragma clang diagnostic ignored "-Wundeclared-selector"
     return isAppExtension ? nil : [UIApplication performSelector:@selector(sharedApplication)];
 #pragma clang diagnostic pop
+    // done
 }
 
 
@@ -159,6 +161,7 @@ static UIApplication *_YYSharedApplication() {
         }
     }
     return YES;
+    // d
 }
 
 - (BOOL)_dbInitialize {
@@ -170,6 +173,7 @@ static UIApplication *_YYSharedApplication() {
     if (![self _dbCheck]) return;
     // Cause a checkpoint to occur, merge `sqlite-wal` file to `sqlite` file.
     sqlite3_wal_checkpoint(_db, NULL);
+    // d
 }
 
 - (BOOL)_dbExecute:(NSString *)sql {
@@ -244,6 +248,7 @@ static UIApplication *_YYSharedApplication() {
         return NO;
     }
     return YES;
+    // done
 }
 
 - (BOOL)_dbUpdateAccessTimeWithKey:(NSString *)key {
@@ -294,6 +299,7 @@ static UIApplication *_YYSharedApplication() {
         return NO;
     }
     return YES;
+    // 从数据库删除对应 key 的 Item
 }
 
 - (BOOL)_dbDeleteItemWithKeys:(NSArray *)keys {
@@ -314,6 +320,7 @@ static UIApplication *_YYSharedApplication() {
         return NO;
     }
     return YES;
+    // d
 }
 
 - (BOOL)_dbDeleteItemsWithSizeLargerThan:(int)size {
@@ -340,6 +347,7 @@ static UIApplication *_YYSharedApplication() {
         return NO;
     }
     return YES;
+    // d
 }
 
 - (YYKVStorageItem *)_dbGetItemFromStmt:(sqlite3_stmt *)stmt excludeInlineData:(BOOL)excludeInlineData {
@@ -571,6 +579,7 @@ static UIApplication *_YYSharedApplication() {
         }
     } while (1);
     return items;
+    // done
 }
 
 - (int)_dbGetItemCountWithKey:(NSString *)key {
@@ -596,6 +605,7 @@ static UIApplication *_YYSharedApplication() {
         return -1;
     }
     return sqlite3_column_int(stmt, 0);
+    // done
 }
 
 - (int)_dbGetTotalItemCount {
@@ -608,6 +618,7 @@ static UIApplication *_YYSharedApplication() {
         return -1;
     }
     return sqlite3_column_int(stmt, 0);
+    // d
 }
 
 
@@ -627,6 +638,7 @@ static UIApplication *_YYSharedApplication() {
 - (BOOL)_fileDeleteWithName:(NSString *)filename {
     NSString *path = [_dataPath stringByAppendingPathComponent:filename];
     return [[NSFileManager defaultManager] removeItemAtPath:path error:NULL];
+    // done
 }
 
 - (BOOL)_fileMoveAllToTrash {
@@ -653,6 +665,7 @@ static UIApplication *_YYSharedApplication() {
             [manager removeItemAtPath:fullPath error:NULL];
         }
     });
+    // done
 }
 
 
@@ -675,6 +688,7 @@ static UIApplication *_YYSharedApplication() {
 - (instancetype)init {
     @throw [NSException exceptionWithName:@"YYKVStorage init error" reason:@"Please use the designated initializer and pass the 'path' and 'type'." userInfo:nil];
     return [self initWithPath:@"" type:YYKVStorageTypeFile];
+    // done
 }
 
 - (instancetype)initWithPath:(NSString *)path type:(YYKVStorageType)type {
@@ -724,6 +738,7 @@ static UIApplication *_YYSharedApplication() {
     }
     [self _fileEmptyTrashInBackground]; // empty the trash if failed at last time
     return self;
+    // done
 }
 
 - (void)dealloc {
@@ -732,14 +747,17 @@ static UIApplication *_YYSharedApplication() {
     if (taskID != UIBackgroundTaskInvalid) {
         [_YYSharedApplication() endBackgroundTask:taskID];
     }
+    // done
 }
 
 - (BOOL)saveItem:(YYKVStorageItem *)item {
     return [self saveItemWithKey:item.key value:item.value filename:item.filename extendedData:item.extendedData];
+    // done
 }
 
 - (BOOL)saveItemWithKey:(NSString *)key value:(NSData *)value {
     return [self saveItemWithKey:key value:value filename:nil extendedData:nil];
+    // done
 }
 
 - (BOOL)saveItemWithKey:(NSString *)key value:(NSData *)value filename:(NSString *)filename extendedData:(NSData *)extendedData {
@@ -766,6 +784,7 @@ static UIApplication *_YYSharedApplication() {
         }
         return [self _dbSaveWithKey:key value:value fileName:nil extendedData:extendedData];
     }
+    // done
 }
 
 - (BOOL)removeItemForKey:(NSString *)key {
@@ -784,6 +803,7 @@ static UIApplication *_YYSharedApplication() {
         } break;
         default: return NO;
     }
+    // done
 }
 
 - (BOOL)removeItemForKeys:(NSArray *)keys {
@@ -802,6 +822,7 @@ static UIApplication *_YYSharedApplication() {
         } break;
         default: return NO;
     }
+    // done
 }
 
 - (BOOL)removeItemsLargerThanSize:(int)size {
@@ -828,6 +849,7 @@ static UIApplication *_YYSharedApplication() {
         } break;
     }
     return NO;
+    // d
 }
 
 - (BOOL)removeItemsEarlierThanTime:(int)time {
@@ -854,6 +876,7 @@ static UIApplication *_YYSharedApplication() {
         } break;
     }
     return NO;
+    // d
 }
 
 - (BOOL)removeItemsToFitSize:(int)maxSize {
@@ -884,6 +907,7 @@ static UIApplication *_YYSharedApplication() {
     } while (total > maxSize && items.count > 0 && suc);
     if (suc) [self _dbCheckpoint];
     return suc;
+    // done，删除文件时将沙盒内和 DB 中的一起删除
 }
 
 - (BOOL)removeItemsToFitCount:(int)maxCount {
@@ -914,6 +938,7 @@ static UIApplication *_YYSharedApplication() {
     } while (total > maxCount && items.count > 0 && suc);
     if (suc) [self _dbCheckpoint];
     return suc;
+    // d
 }
 
 - (BOOL)removeAllItems {
@@ -922,6 +947,7 @@ static UIApplication *_YYSharedApplication() {
     if (![self _dbOpen]) return NO;
     if (![self _dbInitialize]) return NO;
     return YES;
+    // d
 }
 
 - (void)removeAllItemsWithProgressBlock:(void(^)(int removedCount, int totalCount))progress
